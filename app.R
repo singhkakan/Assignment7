@@ -12,8 +12,9 @@ library(shiny)
 library(ggplot2)
 library(shiny)
 library(RColorBrewer)
-setwd("~/RNASeqExample/Assignment7/")
-dataset <- read.csv('sample_info.csv',header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, row.names = 1)
+#setwd("~/RNASeqExample/Assignment7/")
+dataset <- read.csv(file.choose())
+#dataset <- read.csv('sample_info.csv',header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, row.names = 1)
 headerNames=colnames(dataset)
 headerNames[13] = "RdPu"
 headerNames[14] = "RdGy"
@@ -29,9 +30,9 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput('x', 'X', choices=c("None"=FALSE, headerNames[1:12]),headerNames[4]),
       selectInput('y', 'Y', choices=c("None"=FALSE,headerNames[1:12]),headerNames[5]),
-      selectInput('fill', 'Fill', choices=c("None"=T, headerNames[3:11]),headerNames[5]),
+      selectInput('fill', 'Fill', choices=c("None"=T, headerNames[1:11]),headerNames[5]),
       selectInput('size', 'Size', choices=c("None"=FALSE,headerNames[1:12]),headerNames[5]),
-      selectInput('colour', 'Colour', choices =c("None"=TRUE, headerNames[3:11]), headerNames[5]),
+      selectInput('colour', 'Colour', choices =c("None"=TRUE, headerNames[3:11]), headerNames[4]),
       selectInput('facet_row', 'Facet Row', choices=c(None=TRUE, headerNames[2], headerNames[12])),
       selectInput('facet_col', 'Facet Column', choices=c(None='.', headerNames[1:12])),
       selectInput('color_scheme', 'Color_scheme', choices=c("None"=F,headerNames[13:15]), selected=colorNames[1]), 
@@ -57,23 +58,23 @@ server <- function(input, output) {
   
   output$plot <- renderPlot({
     p <- ggplot(dataset, aes_string(
-      x=input$x, fill=input$fill, size=input$size, colour=input$colour)) + scale_color_distiller(palette = input$color_scheme, aesthetics = c("colour", "fill"), na.value="red1")
+      x=input$x, fill=input$fill, size=input$size, colour=input$colour, shape=I(20), alpha=I(0.6))) + scale_color_distiller(palette = I(input$color_scheme), na.value=I("red1"))
     if (input$geom_point)
       p <- p + geom_point(aes_string(y=input$y)) 
     facets <- paste(input$facet_row, '~', input$facet_col) #+ geom_point(scheme1, aes(color=input$color_scheme))
     if (facets != '. ~ .')
       p <- p + facet_grid(facets)
     if (input$geom_bar)
-      p <- p + geom_bar() 
+      p <- p + geom_bar(colour=I("red")) 
     # geom_dotplot doesn't requires an y input
     if (input$geom_dotplot)
       p <- p + geom_dotplot() 
     if (input$geom_violin)
-      p <- p + geom_violin(aes_string(y=input$y))
+      p <- p + geom_violin(aes_string(y=input$y), color=I("blue"))
     if (input$geom_histogram)
-      p <- p + geom_histogram() 
+      p <- p + geom_histogram(color=c(brewer.pal(3, input$color_scheme))[1], aes_string(fill=input$fill), binwidth=5) 
     if (input$geom_density_2d)
-      p <- p + geom_density_2d(aes_string(y=input$y))
+      p <- p + geom_density_2d(aes_string(y=input$y),color="red")
     if (input$geom_bind2d)
       p <- p + geom_bin2d(aes_string(y=input$y))
     if (input$coord_polar)
